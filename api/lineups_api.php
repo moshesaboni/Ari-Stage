@@ -4,6 +4,29 @@ header('Content-Type: application/json');
 
 $response = ['success' => false, 'error' => 'Invalid request'];
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (isset($_GET['lineup_id']) && is_numeric($_GET['lineup_id'])) {
+        try {
+            $lineup_id = intval($_GET['lineup_id']);
+            $pdo = db();
+            $stmt = $pdo->prepare("
+                SELECT s.*, ls.song_order FROM songs s
+                JOIN lineup_songs ls ON s.id = ls.song_id
+                WHERE ls.lineup_id = ?
+                ORDER BY ls.song_order ASC
+            ");
+            $stmt->execute([$lineup_id]);
+            $songs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode($songs);
+            exit;
+        } catch (PDOException $e) {
+            $response['error'] = 'Database error: ' . $e->getMessage();
+        }
+    } else {
+        $response['error'] = 'Lineup ID is required.';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
 

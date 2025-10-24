@@ -50,7 +50,7 @@ $songs = $songs_stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="card">
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="song-search-input" class="form-label">חפש שיר</label>
+                        <label for="search-song-input" class="form-label">חפש שיר</label>
                         <input type="text" class="form-control" id="song-search-input" placeholder="הקלד שם שיר או אמן...">
                     </div>
                     <div id="search-results" style="max-height: 300px; overflow-y: auto;">
