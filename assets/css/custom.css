@@ -1,0 +1,53 @@
+body {
+    font-family: 'Heebo', sans-serif;
+    background-color: #F8FAFC;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.btn-primary {
+    background-color: #1D4ED8;
+    border-color: #1D4ED8;
+}
+.btn-primary:hover {
+    background-color: #1E40AF;
+    border-color: #1E40AF;
+}
+
+.btn-secondary {
+    background-color: #F97316;
+    border-color: #F97316;
+}
+.btn-secondary:hover {
+    background-color: #EA580C;
+    border-color: #EA580C;
+}
+
+.card {
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+}
+
+.form-control, .form-select {
+    border-radius: 0.5rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #1D4ED8;
+    box-shadow: 0 0 0 0.25rem rgba(29, 78, 216, 0.25);
+}
+
+.table {
+    vertical-align: middle;
+}
+
+.duration-input-group {
+    direction: ltr;
+}
+
+.toast-container {
+    z-index: 1080;
+}
