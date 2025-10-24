@@ -1,4 +1,5 @@
 <?php
+$pageName = 'songs';
 session_start();
 require_once 'db/config.php';
 
@@ -16,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($name)) {
                 throw new Exception("שם השיר הוא שדה חובה.");
             }
+            $artist = trim($_POST['artist'] ?? '');
 
             $bpm = !empty($_POST['bpm']) ? (int)$_POST['bpm'] : null;
             $key_note = $_POST['key_note'] ?? '';
@@ -29,14 +31,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $duration_seconds = ($minutes * 60) + $seconds;
 
             if ($action === 'create') {
-                $stmt = $pdo->prepare("INSERT INTO songs (name, bpm, song_key, duration_seconds, notes, tags) VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$name, $bpm, $song_key, $duration_seconds, $notes, $tags]);
+                $stmt = $pdo->prepare("INSERT INTO songs (name, artist, bpm, song_key, duration_seconds, notes, tags) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$name, $artist, $bpm, $song_key, $duration_seconds, $notes, $tags]);
                 $_SESSION['notification'] = ['message' => 'השיר נוצר בהצלחה!', 'type' => 'success'];
             } else { // update
                 $id = (int)($_POST['id'] ?? 0);
                 if ($id > 0) {
-                    $stmt = $pdo->prepare("UPDATE songs SET name=?, bpm=?, song_key=?, duration_seconds=?, notes=?, tags=? WHERE id=?");
-                    $stmt->execute([$name, $bpm, $song_key, $duration_seconds, $notes, $tags, $id]);
+                    $stmt = $pdo->prepare("UPDATE songs SET name=?, artist=?, bpm=?, song_key=?, duration_seconds=?, notes=?, tags=? WHERE id=?");
+                    $stmt->execute([$name, $artist, $bpm, $song_key, $duration_seconds, $notes, $tags, $id]);
                     $_SESSION['notification'] = ['message' => 'השיר עודכן בהצלחה!', 'type' => 'success'];
                 }
             }
@@ -64,8 +66,19 @@ if (isset($_SESSION['notification'])) {
 }
 
 
-// Fetch all songs to display
-$songs = $pdo->query("SELECT * FROM songs ORDER BY name ASC")->fetchAll();
+// Fetch songs with search functionality
+$search = $_GET['search'] ?? '';
+$sql = "SELECT * FROM songs";
+$params = [];
+if (!empty($search)) {
+    $sql .= " WHERE name LIKE ? OR artist LIKE ? OR bpm LIKE ? OR song_key LIKE ? OR notes LIKE ? OR tags LIKE ?";
+    $searchTerm = "%{$search}%";
+    $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm];
+}
+$sql .= " ORDER BY id ASC";
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$songs = $stmt->fetchAll();
 
 function format_duration($seconds) {
     if ($seconds === null || $seconds < 0) return '00:00';
@@ -98,28 +111,50 @@ include 'includes/header.php';
     <button id="addSongBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#songModal"><i class="bi bi-plus-circle me-2"></i>הוסף שיר חדש</button>
 </div>
 
-<div class="card">
+<!-- Search Form -->
+<div class="card mb-4">
+    <div class="card-body p-3">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="search" id="searchInput" class="form-control" placeholder="חיפוש לפי שם, סולם, תג..." value="<?php echo htmlspecialchars($search); ?>">
+            <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button" style="display: none;"><i class="bi bi-x-lg"></i></button>
+        </div>
+    </div>
+</div>
+
+<div id="songsListContainer" class="card">
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead class="table-light">
                     <tr>
+                        <th>#</th>
+                        <th>שם האמן</th>
                         <th>שם השיר</th>
                         <th>BPM</th>
                         <th>סולם</th>
                         <th>משך</th>
                         <th>תגים</th>
+                        <th>הערות</th>
                         <th>פעולות</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="songsTableBody">
                     <?php if (empty($songs)): ?>
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">עדיין אין שירים במאגר. <a href="#" id="addSongBtnLink">הוסף את השיר הראשון שלך!</a></td>
+                        <tr id="noSongsRow">
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <?php if (!empty($search)): ?>
+                                    לא נמצאו שירים התואמים את החיפוש "<?php echo htmlspecialchars($search); ?>".
+                                <?php else: ?>
+                                    עדיין אין שירים במאגר. <a href="#" id="addSongBtnLink">הוסף את השיר הראשון שלך!</a>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($songs as $song): ?>
+                        <?php foreach ($songs as $index => $song): ?>
                             <tr>
+                                <td><?php echo $index + 1; ?></td>
+                                <td><?php echo htmlspecialchars($song['artist']); ?></td>
                                 <td class="fw-bold"><?php echo htmlspecialchars($song['name']); ?></td>
                                 <td><?php echo htmlspecialchars($song['bpm']); ?></td>
                                 <td><?php echo htmlspecialchars($song['song_key']); ?></td>
@@ -131,6 +166,7 @@ include 'includes/header.php';
                                         <?php endif; ?>
                                     <?php endforeach; ?>
                                 </td>
+                                <td><?php echo htmlspecialchars($song['notes']); ?></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary edit-btn" data-song='<?php echo htmlspecialchars(json_encode($song), ENT_QUOTES, 'UTF-8'); ?>'>
                                         <i class="bi bi-pencil"></i>
@@ -164,9 +200,15 @@ include 'includes/header.php';
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">שם השיר <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="artist" class="form-label">שם האמן</label>
+                            <input type="text" class="form-control" id="artist" name="artist">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">שם השיר <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
@@ -228,4 +270,5 @@ include 'includes/header.php';
     </div>
 </div>
 
+<script src="assets/js/songs_page.js?v=<?php echo time(); ?>"></script>
 <?php include 'includes/footer.php'; ?>

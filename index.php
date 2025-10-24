@@ -1,4 +1,7 @@
-<?php include 'includes/header.php'; ?>
+<?php 
+$pageName = 'index';
+include 'includes/header.php'; 
+?>
 
 <div class="text-center">
     <h1 class="display-4 fw-bold">ברוכים הבאים ל-Ari Stage</h1>

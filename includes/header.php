@@ -28,14 +28,15 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <?php $pageName = basename($_SERVER['PHP_SELF'], '.php'); ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="index.php">בית</a>
+                        <a class="nav-link <?php echo ($pageName == 'index') ? 'active' : ''; ?>" <?php echo ($pageName == 'index') ? 'aria-current="page"' : ''; ?> href="index.php">בית</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="songs.php">מאגר שירים</a>
+                        <a class="nav-link <?php echo ($pageName == 'songs') ? 'active' : ''; ?>" <?php echo ($pageName == 'songs') ? 'aria-current="page"' : ''; ?> href="songs.php">מאגר שירים</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link disabled" href="#">ליינאפים</a>
+                        <a class="nav-link <?php echo ($pageName == 'lineups') ? 'active' : ''; ?>" <?php echo ($pageName == 'lineups') ? 'aria-current="page"' : ''; ?> href="lineups.php">ליינאפים</a>
                     </li>
                 </ul>
             </div>
